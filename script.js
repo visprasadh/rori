@@ -23,7 +23,7 @@ let keysPressed = {};
 
 let visX = 0;
 let visY = 0;
-const visSpeed = 4; // Increased from 3 to 3.5
+const visSpeed = 5; 
 
 function movePlayer() {
     let newX = playerX;
