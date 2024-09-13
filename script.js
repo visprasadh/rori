@@ -36,6 +36,46 @@ const laserSpeed = 5;
 const laserCooldown = 2000; // 2 seconds between laser shots
 let lastLaserTime = 0;
 
+// Add these variables at the top of your script
+let cheatCode = '';
+const winCheat = 'jaidhaya';
+
+// Add this function to handle key presses
+function handleKeyPress(event) {
+    if (gameRunning) {
+        const key = event.key.toLowerCase();
+        cheatCode += key;
+        cheatCode = cheatCode.slice(-winCheat.length); // Keep only the last 8 characters
+
+        if (cheatCode === winCheat) {
+            activateCheat();
+        }
+    }
+}
+
+// Add this function to activate the cheat
+function activateCheat() {
+    // Calculate the path to Riri
+    const dx = targetX - playerX;
+    const dy = targetY - playerY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const steps = 20; // Number of steps to take
+
+    let step = 0;
+    const moveInterval = setInterval(() => {
+        if (step < steps) {
+            playerX += dx / steps;
+            playerY += dy / steps;
+            player.style.left = `${playerX}px`;
+            player.style.top = `${playerY}px`;
+            step++;
+        } else {
+            clearInterval(moveInterval);
+            endGame(true); // End the game with a win
+        }
+    }, 50); // Move every 50ms
+}
+
 function movePlayer() {
     let newX = playerX;
     let newY = playerY;
@@ -321,6 +361,7 @@ function startGame() {
     gameRunning = true;
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
+    document.addEventListener('keypress', handleKeyPress);
     
     // Change the interval to 500 milliseconds (0.5 seconds)
     const circleSpawnInterval = setInterval(() => {
