@@ -161,3 +161,20 @@ h1 {
     color: #fff;
     max-width: 80%;
 }
+
+#power-up {
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    background-image: url('assets/powerup.webp'), radial-gradient(circle, #f9ca24, #f0932b);
+    background-size: cover;
+    border-radius: 50%;
+    border: 2px solid #f0932b;
+    box-shadow: 0 0 10px #f9ca24;
+    animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+}

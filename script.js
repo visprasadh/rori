@@ -23,7 +23,13 @@ let keysPressed = {};
 
 let visX = 0;
 let visY = 0;
-const visSpeed = 5; 
+const visSpeed = 3.5; 
+
+let powerUp;
+let powerUpActive = false;
+let powerUpDuration = 5000; // 5 seconds
+let powerUpTimer;
+let speedMultiplier = 1;
 
 function movePlayer() {
     let newX = playerX;
@@ -215,27 +221,21 @@ function createCircle() {
 
 function moveCircles() {
     circles.forEach(circle => {
-        let newX = circle.x + circle.speed.x;
-        let newY = circle.y + circle.speed.y;
+        circle.x += circle.speed.x * speedMultiplier;
+        circle.y += circle.speed.y * speedMultiplier;
         
-        if (checkObstacleCollision(newX, newY, parseInt(circle.element.style.width), parseInt(circle.element.style.height))) {
+        if (checkObstacleCollision(circle.x, circle.y, parseInt(circle.element.style.width), parseInt(circle.element.style.height))) {
             circle.speed.x *= -1;
             circle.speed.y *= -1;
-            newX = circle.x + circle.speed.x;
-            newY = circle.y + circle.speed.y;
         }
         
-        if (newX <= 0 || newX >= gameContainer.clientWidth - parseInt(circle.element.style.width)) {
+        if (circle.x <= 0 || circle.x >= gameContainer.clientWidth - parseInt(circle.element.style.width)) {
             circle.speed.x *= -1;
-            newX = circle.x + circle.speed.x;
         }
-        if (newY <= 0 || newY >= gameContainer.clientHeight - parseInt(circle.element.style.height)) {
+        if (circle.y <= 0 || circle.y >= gameContainer.clientHeight - parseInt(circle.element.style.height)) {
             circle.speed.y *= -1;
-            newY = circle.y + circle.speed.y;
         }
         
-        circle.x = newX;
-        circle.y = newY;
         circle.element.style.left = `${circle.x}px`;
         circle.element.style.top = `${circle.y}px`;
         
@@ -263,6 +263,8 @@ function endGame(won) {
     obstacles.forEach(obstacle => obstacle.element.remove());
     obstacles = [];
     vis.remove(); // Remove Vis when the game ends
+    if (powerUp) powerUp.remove(); // Remove power-up when the game ends
+    clearTimeout(powerUpTimer); // Clear power-up timer
 }
 
 function startGame() {
@@ -296,6 +298,8 @@ function startGame() {
     vis.id = 'vis';
     gameContainer.appendChild(vis);
     
+    spawnPowerUp(); // Generate power-up at the start of the game
+    
     gameRunning = true;
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
@@ -316,6 +320,7 @@ function startGame() {
             movePlayer();
             moveVis(); // Add this line to move Vis
             checkVisCollision(); // Add this line to check for collision with Vis
+            checkPowerUpCollision(); // Add this line
             requestAnimationFrame(gameLoop);
         }
     }
@@ -328,8 +333,8 @@ function moveVis() {
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     if (distance > 0) {
-        visX += (dx / distance) * visSpeed;
-        visY += (dy / distance) * visSpeed;
+        visX += (dx / distance) * visSpeed * speedMultiplier;
+        visY += (dy / distance) * visSpeed * speedMultiplier;
     }
 
     vis.style.left = `${visX}px`;
@@ -340,6 +345,47 @@ function checkVisCollision() {
     if (checkCollision(playerX, playerY, 50, 50, visX, visY, 50, 50)) {
         endGame(false);
     }
+}
+
+function spawnPowerUp() {
+    if (!powerUp) {
+        powerUp = document.createElement('div');
+        powerUp.id = 'power-up';
+        const powerUpPos = randomPosition();
+        powerUp.style.left = `${powerUpPos.x}px`;
+        powerUp.style.top = `${powerUpPos.y}px`;
+        gameContainer.appendChild(powerUp);
+    }
+}
+
+function checkPowerUpCollision() {
+    if (powerUp && checkCollision(playerX, playerY, 50, 50, parseInt(powerUp.style.left), parseInt(powerUp.style.top), 30, 30)) {
+        activatePowerUp();
+    }
+}
+
+function activatePowerUp() {
+    powerUpActive = true;
+    powerUp.remove();
+    powerUp = null;
+
+    // Reduce speed for all elements
+    speedMultiplier = 0.5;
+
+    // Set timer to deactivate power-up
+    powerUpTimer = setTimeout(() => {
+        deactivatePowerUp();
+    }, powerUpDuration);
+}
+
+function deactivatePowerUp() {
+    powerUpActive = false;
+
+    // Restore original speeds
+    speedMultiplier = 1;
+
+    // Spawn a new power-up immediately
+    spawnPowerUp();
 }
 
 startButton.addEventListener('click', startGame);
