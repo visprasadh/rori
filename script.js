@@ -5,6 +5,7 @@ const player = document.getElementById('player');
 const target = document.getElementById('target');
 const gameOver = document.getElementById('game-over');
 const win = document.getElementById('win');
+const vis = document.createElement('div'); // Add Vis element
 
 let gameRunning = false;
 let playerX = 0;
@@ -19,6 +20,10 @@ const obstacleCount = 5;
 const playerSpeed = 20; // Increased from 10 to 20
 
 let keysPressed = {};
+
+let visX = 0;
+let visY = 0;
+const visSpeed = 3; // Increased from 2 to 3
 
 function movePlayer() {
     let newX = playerX;
@@ -257,6 +262,7 @@ function endGame(won) {
     circles = [];
     obstacles.forEach(obstacle => obstacle.element.remove());
     obstacles = [];
+    vis.remove(); // Remove Vis when the game ends
 }
 
 function startGame() {
@@ -281,28 +287,59 @@ function startGame() {
     // Initialize Riri's speed
     updateRiriDirection();
     
+    // Spawn Vis randomly
+    const visPos = randomPosition();
+    visX = visPos.x;
+    visY = visPos.y;
+    vis.style.left = `${visX}px`;
+    vis.style.top = `${visY}px`;
+    vis.id = 'vis';
+    gameContainer.appendChild(vis);
+    
     gameRunning = true;
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
     
-    // Change the interval to 250 milliseconds (0.25 seconds)
+    // Change the interval to 500 milliseconds (0.5 seconds)
     const circleSpawnInterval = setInterval(() => {
         if (gameRunning) {
             createCircle();
         } else {
             clearInterval(circleSpawnInterval);
         }
-    }, 250);
+    }, 500);
     
     function gameLoop() {
         if (gameRunning) {
             moveCircles();
             moveTarget();
             movePlayer();
+            moveVis(); // Add this line to move Vis
+            checkVisCollision(); // Add this line to check for collision with Vis
             requestAnimationFrame(gameLoop);
         }
     }
     gameLoop();
+}
+
+function moveVis() {
+    const dx = playerX - visX;
+    const dy = playerY - visY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance > 0) {
+        visX += (dx / distance) * visSpeed;
+        visY += (dy / distance) * visSpeed;
+    }
+
+    vis.style.left = `${visX}px`;
+    vis.style.top = `${visY}px`;
+}
+
+function checkVisCollision() {
+    if (checkCollision(playerX, playerY, 50, 50, visX, visY, 50, 50)) {
+        endGame(false);
+    }
 }
 
 startButton.addEventListener('click', startGame);

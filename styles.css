@@ -92,7 +92,7 @@ h1 {
     position: relative;
 }
 
-#player, #target {
+#player, #target, #vis {
     width: 50px;
     height: 50px;
     position: absolute;
@@ -112,6 +112,11 @@ h1 {
 #target {
     background-image: url('assets/riri.webp'), linear-gradient(45deg, #48dbfb, #ff9ff3);
     background-color: #48dbfb;
+}
+
+#vis {
+    background-image: url('assets/vis.webp'), linear-gradient(45deg, #54a0ff, #5f27cd);
+    background-color: #54a0ff;
 }
 
 .circle {
