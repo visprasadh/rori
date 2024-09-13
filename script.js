@@ -338,3 +338,23 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Add instructions button and overlay
+const instructionsButton = document.createElement('button');
+instructionsButton.textContent = 'Instructions';
+instructionsButton.id = 'instructions-button';
+gameContainer.appendChild(instructionsButton);
+
+const instructionsOverlay = document.createElement('div');
+instructionsOverlay.id = 'instructions-overlay';
+instructionsOverlay.innerHTML = document.getElementById('instructions').innerHTML;
+instructionsOverlay.style.display = 'none';
+gameContainer.appendChild(instructionsOverlay);
+
+instructionsButton.addEventListener('click', () => {
+    if (instructionsOverlay.style.display === 'none') {
+        instructionsOverlay.style.display = 'block';
+    } else {
+        instructionsOverlay.style.display = 'none';
+    }
+});
