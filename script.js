@@ -123,13 +123,34 @@ function checkObstacleCollision(x, y, width, height) {
     return false;
 }
 
-function moveTarget() {
-    let newX = targetX + targetSpeed.x;
-    let newY = targetY + targetSpeed.y;
+const FLEE_DISTANCE = 200; // Distance at which Riri starts to flee
+const FLEE_SPEED_MULTIPLIER = 1.5; // How much faster Riri moves when fleeing
 
-    // Randomly change direction occasionally
-    if (Math.random() < 0.05) { // 5% chance each frame to change direction
-        updateRiriDirection();
+function moveTarget() {
+    let dx = playerX - targetX;
+    let dy = playerY - targetY;
+    let distanceToPlayer = Math.sqrt(dx * dx + dy * dy);
+
+    let newX, newY;
+
+    if (distanceToPlayer < FLEE_DISTANCE) {
+        // Riri is close to Rona, flee!
+        let fleeAngle = Math.atan2(dy, dx) + Math.PI; // Opposite direction
+        let fleeSpeed = MAX_SPEED * FLEE_SPEED_MULTIPLIER;
+        
+        newX = targetX + Math.cos(fleeAngle) * fleeSpeed;
+        newY = targetY + Math.sin(fleeAngle) * fleeSpeed;
+    } else {
+        // Normal random movement
+        newX = targetX + targetSpeed.x;
+        newY = targetY + targetSpeed.y;
+
+        // Randomly change direction occasionally
+        if (Math.random() < 0.05) { // 5% chance each frame to change direction
+            updateRiriDirection();
+            newX = targetX + targetSpeed.x;
+            newY = targetY + targetSpeed.y;
+        }
     }
 
     if (checkObstacleCollision(newX, newY, 50, 50)) {
@@ -152,11 +173,12 @@ function moveTarget() {
         targetSpeed.x += (Math.random() - 0.5) * 5;
     }
 
-    // Ensure speed doesn't exceed MAX_SPEED
+    // Ensure speed doesn't exceed MAX_SPEED * FLEE_SPEED_MULTIPLIER
     const currentSpeed = Math.sqrt(targetSpeed.x ** 2 + targetSpeed.y ** 2);
-    if (currentSpeed > MAX_SPEED) {
-        targetSpeed.x = (targetSpeed.x / currentSpeed) * MAX_SPEED;
-        targetSpeed.y = (targetSpeed.y / currentSpeed) * MAX_SPEED;
+    const maxAllowedSpeed = MAX_SPEED * FLEE_SPEED_MULTIPLIER;
+    if (currentSpeed > maxAllowedSpeed) {
+        targetSpeed.x = (targetSpeed.x / currentSpeed) * maxAllowedSpeed;
+        targetSpeed.y = (targetSpeed.y / currentSpeed) * maxAllowedSpeed;
     }
 
     targetX = newX;
