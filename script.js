@@ -83,7 +83,7 @@ let targetSpeed = {
     y: 0
 };
 
-const MAX_SPEED = 12; // Increased maximum speed
+const MAX_SPEED = 8; // Increased maximum speed
 
 function updateRiriDirection() {
     const angle = Math.random() * 2 * Math.PI;
