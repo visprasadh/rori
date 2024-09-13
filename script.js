@@ -31,6 +31,11 @@ let powerUpDuration = 5000; // 5 seconds
 let powerUpTimer;
 let speedMultiplier = 1;
 
+let lasers = [];
+const laserSpeed = 5;
+const laserCooldown = 2000; // 2 seconds between laser shots
+let lastLaserTime = 0;
+
 function movePlayer() {
     let newX = playerX;
     let newY = playerY;
@@ -251,20 +256,33 @@ function checkCollision(x1, y1, w1, h1, x2, y2, w2, h2) {
 
 function endGame(won) {
     gameRunning = false;
-    if (won) {
-        win.style.display = 'block';
-    } else {
-        gameOver.style.display = 'block';
-    }
-    document.removeEventListener('keydown', handleKeyDown);
-    document.removeEventListener('keyup', handleKeyUp);
+    
+    // Remove all circles
     circles.forEach(circle => circle.element.remove());
     circles = [];
-    obstacles.forEach(obstacle => obstacle.element.remove());
-    obstacles = [];
-    vis.remove(); // Remove Vis when the game ends
-    if (powerUp) powerUp.remove(); // Remove power-up when the game ends
-    clearTimeout(powerUpTimer); // Clear power-up timer
+
+    // Remove power-up if it exists
+    if (powerUp) {
+        powerUp.remove();
+        powerUp = null;
+    }
+
+    // Remove all lasers if they exist
+    if (typeof lasers !== 'undefined') {
+        lasers.forEach(laser => laser.element.remove());
+        lasers = [];
+    }
+
+    // Keep Rona, Riri, and Vis tiles visible
+    player.style.zIndex = '1000';
+    target.style.zIndex = '1000';
+    vis.style.zIndex = '1000';
+
+    // Display the appropriate end screen
+    const endScreen = won ? win : gameOver;
+    endScreen.style.display = 'flex';
+
+    // ... rest of endGame logic ...
 }
 
 function startGame() {
@@ -321,6 +339,8 @@ function startGame() {
             moveVis(); // Add this line to move Vis
             checkVisCollision(); // Add this line to check for collision with Vis
             checkPowerUpCollision(); // Add this line
+            shootLaser();
+            moveLasers();
             requestAnimationFrame(gameLoop);
         }
     }
@@ -386,6 +406,53 @@ function deactivatePowerUp() {
 
     // Spawn a new power-up immediately
     spawnPowerUp();
+}
+
+function shootLaser() {
+    const currentTime = Date.now();
+    if (currentTime - lastLaserTime > laserCooldown) {
+        const dx = playerX - visX;
+        const dy = playerY - visY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        const laser = document.createElement('div');
+        laser.className = 'laser';
+        laser.style.left = `${visX + 25}px`;
+        laser.style.top = `${visY + 25}px`;
+        gameContainer.appendChild(laser);
+        
+        lasers.push({
+            element: laser,
+            x: visX + 25,
+            y: visY + 25,
+            dx: (dx / distance) * laserSpeed,
+            dy: (dy / distance) * laserSpeed
+        });
+        
+        lastLaserTime = currentTime;
+    }
+}
+
+function moveLasers() {
+    lasers.forEach((laser, index) => {
+        laser.x += laser.dx * speedMultiplier;
+        laser.y += laser.dy * speedMultiplier;
+        
+        laser.element.style.left = `${laser.x}px`;
+        laser.element.style.top = `${laser.y}px`;
+        
+        // Remove laser if it's out of bounds
+        if (laser.x < 0 || laser.x > gameContainer.offsetWidth || 
+            laser.y < 0 || laser.y > gameContainer.offsetHeight) {
+            laser.element.remove();
+            lasers.splice(index, 1);
+        }
+        
+        // Check collision with Rona
+        if (checkCollision(playerX, playerY, 50, 50, laser.x, laser.y, 10, 10)) {
+            endGame(false);
+        }
+    });
 }
 
 startButton.addEventListener('click', startGame);
